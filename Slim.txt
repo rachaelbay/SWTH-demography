@@ -1,0 +1,39 @@
+initialize() {
+initializeMutationRate(3.44e-8);
+initializeMutationType("m1",0.5,"f",0);
+initializeMutationType("m2",0.5,"e",0.05);
+initializeGenomicElementType("g1",m1,1);
+initializeGenomicElement(g1,0,1000000);
+initializeRecombinationRate(c(1e-5,1e-8,1e-5,1e-8,1e-5),c(300000,400000,700000,800000,1000000));
+initializeSex("A");
+}
+1 {
+	sim.addSubpop("p0",3922);
+}
+1000 {
+	sim.addSubpopSplit("p2",1961,p0);
+	sim.addSubpopSplit("p1",1961,p0);
+	p0.setSubpopulationSize(0);
+}
+3331:4231 {
+	p1.setSubpopulationSize(asInteger(round((1+3.74e-3)^(sim.generation-3330)*1961)));
+	p2.setSubpopulationSize(asInteger(round((1+2.02e-3)^(sim.generation-3330)*1961)));
+}
+1000:4231 late() { // This creates selective sweeps in the inland population
+	target=sample(p1.genomes,1);
+	target.addNewDrawnMutation(m2,sample(1:999999,1));
+}
+//1000:4231 late() { // Selective sweeps in the coastal population
+//	target2=sample(p2.genomes,1);
+//	target2.addNewDrawnMutation(m2,sample(1:999999,1));
+//}
+//1:4231 fitness(m2,p2) {return 1.0;} // Make introgressing beneficial alleles neutral in coastal population
+4230 { //Set time of secondary contact
+	p1.setMigrationRates(p2,0.0007); //Set migration rates
+	p2.setMigrationRates(p1,0.0035);
+}
+4231 late() {
+	p1.outputVCFSample(15,replace=F,requestedSex="*",outputMultiallelics=F,filePath="~/Documents/MigratoryBirds/Swainsons/Demography/forwardsim/23_p1.vcf",append=F);
+	p2.outputVCFSample(15,replace=F,requestedSex="*",outputMultiallelics=F,filePath="~/Documents/MigratoryBirds/Swainsons/Demography/forwardsim/23_p2.vcf",append=F);
+}
+4231 {sim.simulationFinished();}
